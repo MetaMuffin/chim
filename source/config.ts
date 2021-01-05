@@ -17,6 +17,9 @@ export const sgr_bg = (r: number, g: number, b: number) => `\x1b[48;2;${r};${g};
 
 export var config: Config = {
     colors: {
+        mode_danger: sgr_bold + sgr_fg(255, 100, 100),
+        mode_default: sgr_bold,
+
         err_system: sgr_fg(255, 70, 0),
         log_system: sgr_fg(0, 255, 255),
 
@@ -24,7 +27,9 @@ export var config: Config = {
         message_mention_me: sgr_bold + sgr_fg(255, 0, 0),
 
         content: "",
-        content_channel: "",
+        content_channel: sgr_fg(255, 255, 100),
+        content_guild: sgr_fg(100, 255, 100),
+        content_category: sgr_bold + sgr_fg(255, 255, 255),
         content_author: sgr_fg(255, 100, 255),
         content_mention_user: sgr_bold,
         content_mention_role: sgr_bold,
@@ -37,6 +42,9 @@ export var config: Config = {
 
 export interface Config {
     colors: {
+        mode_default: string,
+        mode_danger: string,
+
         err_system: string,
         log_system: string,
 
@@ -45,6 +53,8 @@ export interface Config {
 
         content: string
         content_channel: string,
+        content_guild: string,
+        content_category: string,
         content_author: string,
         content_mention_user: string,
         content_mention_role: string,

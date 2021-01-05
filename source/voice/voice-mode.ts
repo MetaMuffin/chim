@@ -76,7 +76,6 @@ export const VOICE_MODE: Mode = {
                     rtAudio.write(chunk)
                 })
                 rtAudio.start();
-
             })
             voice_connection.on("ready", () => {
                 statusLine(syslog("voice ready"))

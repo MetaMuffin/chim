@@ -1,4 +1,4 @@
-import { Channel, DMChannel, GuildMember, Message, NewsChannel, TextChannel, VoiceChannel } from "discord.js"
+import { CategoryChannel, Channel, DMChannel, Guild, GuildMember, Message, NewsChannel, TextChannel, VoiceChannel } from "discord.js"
 import { client } from "."
 import { config, sgr_reset } from "./config"
 import { log } from "./logging"
@@ -6,9 +6,8 @@ import { selection } from "./select"
 
 
 
-function displayMessage(msg: Message): string {
-    if (!(msg.channel instanceof TextChannel)) return ""
-    return `[${config.colors.content_channel + msg.channel.name}]: ${displayMemberShort(msg?.member) || "rcpt"}: ${config.colors.content + msg.content + sgr_reset}`
+export function displayMessage(msg: Message): string {
+    return `[${displayChannelShort(msg.channel)}]: ${displayMemberShort(msg?.member) || "rcpt"}: ${config.colors.content + msg.content + sgr_reset}`
 }
 
 function displayMemberShort(member: GuildMember | undefined | null): string | undefined {
@@ -16,13 +15,16 @@ function displayMemberShort(member: GuildMember | undefined | null): string | un
     return config.colors.content_author + member.user.tag + sgr_reset
 }
 export function displayChannelShort(c: Channel | undefined): string | undefined {
-    if (c instanceof TextChannel) return "t#" + c.name
-    if (c instanceof NewsChannel) return "n#" + c.name
-    if (c instanceof VoiceChannel) return "v#" + c.name
-    if (c instanceof DMChannel) return "d#" + c.recipient.tag
+    if (c instanceof TextChannel) return config.colors.content_channel + "t#" + c.name + sgr_reset
+    if (c instanceof NewsChannel) return config.colors.content_channel + "n#" + c.name + sgr_reset
+    if (c instanceof VoiceChannel) return config.colors.content_channel + "v#" + c.name + sgr_reset
+    if (c instanceof DMChannel) return config.colors.content_channel + "d#" + c.recipient.tag + sgr_reset
+    if (c instanceof CategoryChannel) return config.colors.content_category + "c#" + c.name + sgr_reset
     return undefined
 }
-
+export function displayGuildShort(g: Guild): string {
+    return config.colors.content_guild + g.name + sgr_reset
+}
 
 export function onMessage(msg: Message) {
     if (client.user) var should_notify = msg.mentions.has(client.user)

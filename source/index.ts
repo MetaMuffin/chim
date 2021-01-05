@@ -18,7 +18,7 @@ function init() {
         for (let i = 0; i < input.length; i++) {
             const char = input.charAt(i);
             if (char == "\u0003") process.exit(0)
-            else if (char == "\u001b") {
+            else if (char == "\u001b" && mode != "normal") {
                 setMode("normal")
             }
             MODES[mode].oninput(char)
@@ -27,7 +27,6 @@ function init() {
     log(syslog("ready"))
     setMode("normal")
 }
-
 
 export const client = new Client();
 client.on('ready', () => {

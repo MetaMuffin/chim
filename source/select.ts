@@ -1,10 +1,10 @@
 import { Channel, DMChannel, Guild, GuildChannel, NewsChannel, TextChannel, VoiceChannel } from "discord.js"
 import { inspect } from "util"
 import { client } from "."
-import { displayChannelShort } from "./display"
+import { displayChannelShort, displayGuildShort } from "./display"
 import { input_buffers, handleInput } from "./input"
 import { log, statusLine, syserr, syslog } from "./logging"
-import { Mode, setMode } from "./modes"
+import { mod, Mode, setMode } from "./modes"
 
 export var selection: { text_channel: Channel | undefined, guild: Guild | undefined, voice_channel: VoiceChannel | undefined } = {
     text_channel: undefined,
@@ -39,9 +39,20 @@ function suggestGuild(input: string): Guild | undefined {
     return sorted_matching[0][0]
 }
 
+function listChannels() {
+    if (!selection.guild) statusLine(syserr("no guild selected"))
+    log(syslog("listing all channels"))
+    setMode("normal")
+    selection.guild?.channels.cache.forEach(ch => {
+        log("    " + displayChannelShort(ch))
+    })
+}
+
 export const SELECT_TEXT_CHANNEL_MODE: Mode = {
     onleave: () => { },
-    onenter: () => { },
+    onenter: () => {
+        if (mod == "list") return listChannels()
+    },
     linebuf: () => "(text channel) ",
     oninput: (char) => {
         var suggestion = suggestChannel(input_buffers["select_text_channel"] + char, "text")
@@ -50,7 +61,7 @@ export const SELECT_TEXT_CHANNEL_MODE: Mode = {
             var channel = suggestChannel(input, "text")
             if (!channel) return statusLine(syserr("no matching channels"))
             selection.text_channel = channel
-            statusLine(`selected: ${displayChannelShort(selection.text_channel)}`)
+            statusLine(syslog(`selected: ${displayChannelShort(selection.text_channel)}`))
             setMode("normal")
         })
     }
@@ -59,7 +70,9 @@ export const SELECT_TEXT_CHANNEL_MODE: Mode = {
 
 export const SELECT_VOICE_CHANNEL_MODE: Mode = {
     onleave: () => { },
-    onenter: () => { },
+    onenter: () => {
+        if (mod == "list") return listChannels()
+    },
     linebuf: () => "(voice channel) ",
     oninput: (char) => {
         var suggestion = suggestChannel(input_buffers["select_voice_channel"] + char, "voice")
@@ -70,7 +83,7 @@ export const SELECT_VOICE_CHANNEL_MODE: Mode = {
             if (!channel) return statusLine(syserr("no matching voice channels"))
             if (!(channel instanceof VoiceChannel)) throw new Error("this should have never happend");
             selection.voice_channel = channel
-            statusLine(`selected: ${displayChannelShort(selection.voice_channel)}`)
+            statusLine(syslog(`selected: ${displayChannelShort(selection.voice_channel)}`))
             setMode("normal")
         })
     }
@@ -78,16 +91,24 @@ export const SELECT_VOICE_CHANNEL_MODE: Mode = {
 
 export const SELECT_GUILD_MODE: Mode = {
     onleave: () => { },
-    onenter: () => { },
+    onenter: () => {
+        if (mod == "list") {
+            log(syslog("listing all guilds"))
+            client.guilds.cache.forEach(g => {
+                log("   " + displayGuildShort(g))
+            })
+            setMode("normal")
+        }
+    },
     linebuf: () => "(guild) ",
     oninput: (char) => {
         var suggestion = suggestGuild(input_buffers["select_guild"] + char)
-        if (suggestion) statusLine(suggestion.name || syserr("no guild found"))
+        if (suggestion) statusLine(displayGuildShort(suggestion) || syserr("no guild found"))
         handleInput("select_guild", char, (input) => {
             var guild = suggestGuild(input)
             if (!guild) return statusLine(syserr("no matching guilds"))
             selection.guild = guild
-            statusLine(`selected: ${selection.guild.name}`)
+            statusLine(syslog(`selected: ${displayGuildShort(selection.guild)}`))
             setMode("normal")
         })
     }
