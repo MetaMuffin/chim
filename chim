@@ -1,0 +1,10 @@
+#!/bin/sh
+pushd .
+DIRLOC="${BASH_SOURCE}"
+while [[ -L "$DIRLOC" ]]; do
+    DIRLOC="$(readlink -f ${DIRLOC})"
+done
+cd "$(dirname "${DIRLOC}")"
+node dist/index.js "$@"
+popd
+

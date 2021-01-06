@@ -1,57 +1,57 @@
-import { Channel, Client, DMChannel, Guild, Message, TextChannel } from "discord.js";
+import { Channel, Client, DMChannel, Guild, GuildMember, NewsChannel, TextChannel, User } from "discord.js";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { log, statusLine, syserr, syslog } from "./logging";
-import { ModeName, MODES, setMode, mode, } from "./modes";
-import { onMessage } from "./display";
+import { Logger } from "./logger"
 
-process.stdout.write("\x1b]0;chim - discord frontend improved\x07")
-
-
-
-function init() {
-    process.stdin.setRawMode(true)
-    
-    process.stdin.on("data", (chunk) => {
-        var input = chunk.toString()
-        //console.log(JSON.stringify(input))
-        for (let i = 0; i < input.length; i++) {
-            const char = input.charAt(i);
-            if (char == "\u0003") process.exit(0)
-            else if (char == "\u001b" && mode != "normal") {
-                setMode("normal")
-            }
-            MODES[mode].oninput(char)
-        }
-    })
-    log(syslog("ready"))
-    setMode("normal")
+export interface GlobalState {
+    channel: Channel | undefined
+    guild: Guild | undefined
+    user: User | undefined
+    member: GuildMember | undefined
 }
+export var glob_state: GlobalState = {
+    channel: undefined,
+    guild: undefined,
+    member: undefined,
+    user: undefined
+}
+
 
 export const client = new Client();
-client.on('ready', () => {
-    init()
-});
+function start() {
+    process.stdin.setRawMode(true)
+    process.stdout.write("\n\n")
+    Logger.log("logging in", ["info"])
 
-client.on('message', msg => {
-    onMessage(msg)
-});
+    client.on('ready', () => {
+        init()
+    });
+    client.on('message', msg => {
 
-client.login(readFileSync(join(__dirname, "../token")).toString().trim());
+    });
 
-//setInterval(() => statusLine(Math.random().toString()),1000)
+    client.login(readFileSync(join(__dirname, "../token")).toString().trim());
+}
 
-process.stdout.write("\x1b[?1049h")
+function init() {
+    Logger.log("ready", ["success"])
+    process.stdin.on("data", (chunk) => {
+        for (let i = 0; i < chunk.toString().length; i++) {
+            const char = chunk.toString().charAt(i);
+            if (char == "\u0003") return exit()
+
+
+        }
+    })
+}
+
+
 export function exit() {
+    Logger.log("exit", ["info"])
     process.stdin.setRawMode(false)
-    process.stdout.write("\x1b[?1049l" + syslog("exit"))
     process.exit(0)
 }
-process.on("SIGTERM",() => exit())
-process.on("SIGINT",() => exit())
+process.on("SIGTERM", () => exit())
+process.on("SIGINT", () => exit())
 
-log(syslog("logging in"))
-
-console.log = (s:string) => log(syslog(s,"unknown-log"))
-console.error = (s:string) => log(syserr(s,"unknown-err"))
-console.warn = (s:string) => log(syserr(s,"unknown-warn"))
+start()
